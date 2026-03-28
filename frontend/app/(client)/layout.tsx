@@ -1,7 +1,12 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
+import { logout } from '@/lib/auth';
 
-export const metadata: Metadata = {
+// metadata só funciona em Server Components — mantido como referência mas não exportado
+// quando o layout for convertido de volta para Server Component
+const _metadata: Metadata = {
   title: {
     template: '%s | SAC Automático — Relatórios',
     default: 'Relatórios',
@@ -21,7 +26,24 @@ export default function ClientLayout({ children }: ClientLayoutProps): JSX.Eleme
     <div className="client-layout">
       <nav className="client-nav">
         <div className="client-nav__brand">SAC Automático</div>
-        <div className="client-nav__badge">Relatórios</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="client-nav__badge">Relatórios</div>
+          <button
+            onClick={logout}
+            style={{
+              fontSize: '0.8rem',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            Sair
+          </button>
+        </div>
       </nav>
       <main className="client-main">{children}</main>
       <style>{`

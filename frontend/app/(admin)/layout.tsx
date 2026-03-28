@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { SidebarNav } from '@/components/SidebarNav';
+import { logout } from '@/lib/auth';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -17,7 +18,24 @@ export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element
     <div className="admin-layout">
       <nav className="admin-nav">
         <div className="admin-nav__brand">SAC Automático</div>
-        <div className="admin-nav__badge">Gestor</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="admin-nav__badge">Gestor</div>
+          <button
+            onClick={logout}
+            style={{
+              fontSize: '0.8rem',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            Sair
+          </button>
+        </div>
       </nav>
       <div className="admin-body">
         <SidebarNav />
