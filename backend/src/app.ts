@@ -1,9 +1,11 @@
+import 'dotenv/config';
 import express from 'express';
 import type { Request, Response } from 'express';
 import { env } from './config/env.js';
 import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { connectRedis, disconnectRedis } from './config/redis.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
+import { authRouter } from './modules/auth/auth.routes.js';
 import { instagramRouter } from './modules/instagram/instagram.routes.js';
 import { trackerRouter } from './modules/tracker/tracker.routes.js';
 import { analyticsRouter } from './modules/analytics/analytics.routes.js';
@@ -88,6 +90,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // ── Rotas ─────────────────────────────────────────────────────
+app.use('/auth', authRouter);
 app.use('/instagram', instagramRouter);
 app.use('/t', trackerRouter);
 app.use('/analytics', analyticsRouter);

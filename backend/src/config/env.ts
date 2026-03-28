@@ -24,6 +24,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET deve ter ao menos 32 caracteres'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET deve ter ao menos 32 caracteres'),
 
+  // Autenticação admin
+  ADMIN_USERNAME: z.string().min(3, 'ADMIN_USERNAME deve ter ao menos 3 caracteres'),
+  ADMIN_PASSWORD: z.string().min(8, 'ADMIN_PASSWORD deve ter ao menos 8 caracteres (hash bcrypt)'),
+
   // Criptografia de tokens (AES-256 = 32 bytes = 64 hex chars)
   TOKEN_ENCRYPTION_KEY: z
     .string()
