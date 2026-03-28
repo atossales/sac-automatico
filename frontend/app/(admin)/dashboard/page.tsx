@@ -1,114 +1,126 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Dashboard',
-};
+import { useState, useEffect } from 'react';
+import { healthApi, queueApi, type QueueStats } from '@/lib/api';
+import { StatusCard } from '@/components/StatusCard';
+import { QueueMonitor } from '@/components/QueueMonitor';
+import { Skeleton } from '@/components/Skeleton';
 
 /**
- * Dashboard do Gestor — Fase 4, Módulo 6.
- *
- * Esta página será implementada completamente na Fase 4 com:
- * - Monitor de fila BullMQ em tempo real
- * - Configuração de contas e personas
- * - Playground de prompts
- * - Logs de processamento
- *
- * Por enquanto exibe o estado das contas e métricas gerais.
+ * Dashboard do Gestor — Módulo 6.
+ * Exibe status do sistema e monitor de fila BullMQ em tempo real.
  */
 export default function AdminDashboardPage(): JSX.Element {
+  // TODO: obter token de autenticacao
+  const token = '';
+
+  const [healthStatus, setHealthStatus] = useState<string | null>(null);
+  const [stats, setStats] = useState<QueueStats | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+
+  useEffect(() => {
+    async function fetchInitialData(): Promise<void> {
+      const [healthResult, statsResult] = await Promise.allSettled([
+        healthApi.check(),
+        queueApi.getStats(token),
+      ]);
+
+      if (healthResult.status === 'fulfilled') {
+        setHealthStatus('Sistema operacional');
+      } else {
+        setHealthStatus('Offline');
+      }
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value.data);
+      } else {
+        setStats({ waiting: 0, active: 0, failed: 0, completed: 0 });
+      }
+
+      setLoadingStatus(false);
+    }
+
+    void fetchInitialData();
+  }, []);
+
+  const successRate =
+    stats !== null && stats.completed > 0
+      ? Math.round((stats.completed / (stats.completed + stats.failed)) * 100)
+      : 0;
+
+  const isOnline = healthStatus === 'Sistema operacional';
+
   return (
     <div>
       <header style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-text)' }}>
+        <h1
+          style={{
+            fontSize: '1.75rem',
+            fontWeight: 700,
+            color: 'var(--color-text)',
+          }}
+        >
           Painel do Gestor
         </h1>
-        <p style={{ color: 'var(--color-text-muted)', marginTop: '4px' }}>
+        <p
+          style={{
+            fontSize: '0.875rem',
+            fontWeight: 400,
+            color: 'var(--color-text-muted)',
+            marginTop: '4px',
+          }}
+        >
           Visão geral do sistema SAC Automático
         </p>
       </header>
 
+      {/* StatusCards grid */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '20px',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+          gap: '24px',
           marginBottom: '32px',
         }}
       >
-        <StatusCard
-          title="Contas Conectadas"
-          value="—"
-          description="Instagram Business ativas"
-          color="var(--color-primary)"
-        />
-        <StatusCard
-          title="Fila de Mensagens"
-          value="—"
-          description="Jobs aguardando processamento"
-          color="var(--color-warning)"
-        />
-        <StatusCard
-          title="Mensagens Hoje"
-          value="—"
-          description="DMs processados nas últimas 24h"
-          color="var(--color-success)"
-        />
-        <StatusCard
-          title="Taxa de Sucesso"
-          value="—"
-          description="Jobs concluídos sem falha"
-          color="var(--color-success)"
-        />
+        {loadingStatus ? (
+          <>
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} height="120px" />
+            ))}
+          </>
+        ) : (
+          <>
+            <StatusCard
+              title="Status do Sistema"
+              value={healthStatus ?? '—'}
+              description="Backend API"
+              borderColor={isOnline ? 'var(--color-success)' : 'var(--color-error)'}
+            />
+            <StatusCard
+              title="Jobs Aguardando"
+              value={stats !== null ? String(stats.waiting) : '—'}
+              description="Na fila de processamento"
+              borderColor="var(--color-warning)"
+            />
+            <StatusCard
+              title="Jobs com Falha"
+              value={stats !== null ? String(stats.failed) : '—'}
+              description="Requerem atenção"
+              borderColor="var(--color-error)"
+            />
+            <StatusCard
+              title="Taxa de Sucesso"
+              value={`${successRate}%`}
+              description="Jobs concluídos sem falha"
+              borderColor="var(--color-success)"
+            />
+          </>
+        )}
       </div>
 
-      <div
-        style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius)',
-          padding: '24px',
-        }}
-      >
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '12px' }}>
-          Fase de desenvolvimento
-        </h2>
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-          O dashboard completo do gestor (M6) será implementado na Fase 4, incluindo monitor de
-          fila em tempo real, configuração de personas, playground de prompts e análise de
-          conversas.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-interface StatusCardProps {
-  title: string;
-  value: string;
-  description: string;
-  color: string;
-}
-
-function StatusCard({ title, value, description, color }: StatusCardProps): JSX.Element {
-  return (
-    <div
-      style={{
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius)',
-        padding: '20px',
-        borderLeftWidth: '4px',
-        borderLeftColor: color,
-        boxShadow: 'var(--shadow)',
-      }}
-    >
-      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
-        {title}
-      </p>
-      <p style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)' }}>{value}</p>
-      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-        {description}
-      </p>
+      {/* QueueMonitor full width */}
+      <QueueMonitor token={token} />
     </div>
   );
 }
