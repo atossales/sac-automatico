@@ -4,14 +4,14 @@
 Phase 4 — Frontend (M5 + M6)
 
 ## Current Plan
-Plan 4 of 5 (04-04 next)
+Plan 5 of 5 — COMPLETA (04-05 concluído)
 
 ## Progress
-[################....] 4/5 plans complete in phase 4
+[####################] 5/5 plans complete in phase 4
 
 ## Status
 - Phases 1–3: Backend bootstrapado com estrutura completa
-- Phase 4: Em execução — plans 04-01, 04-02 e 04-03 concluídos
+- Phase 4: COMPLETA — todos os 5 plans concluídos
 
 ## Frontend Atual
 - `frontend/app/globals.css` — dark theme com CSS variables + @keyframes skeleton-pulse
@@ -30,6 +30,15 @@ Plan 4 of 5 (04-04 next)
 - `frontend/app/(admin)/dashboard/page.tsx` — dashboard M6 com 4 StatusCards + QueueMonitor
 - `frontend/app/(client)/dashboard/page.tsx` — painel do cliente M5 completo (Client Component)
 - `frontend/app/auth/callback/` — placeholder OAuth callback
+- `frontend/components/ConfirmModal.tsx` — modal de confirmação reutilizável com Escape key e role=dialog
+- `frontend/components/AccountList.tsx` — lista de contas Instagram com status badge e fluxo OAuth
+- `frontend/components/PersonaForm.tsx` — formulário de persona com system prompt e delay sliders validados
+- `frontend/app/(admin)/accounts/page.tsx` — página /admin/accounts
+- `frontend/app/(admin)/personas/page.tsx` — página /admin/personas
+- `frontend/components/PromptPlayground.tsx` — playground de prompts com aviso de simulacao, AccountSelector, resposta IA e metadados
+- `frontend/components/LogTable.tsx` — tabela de logs com filtros triplos (conta/status/periodo) e badges coloridos
+- `frontend/app/(admin)/playground/page.tsx` — página /admin/playground
+- `frontend/app/(admin)/logs/page.tsx` — página /admin/logs
 
 ## Decisões Tomadas
 - Dark theme: obrigatório, já definido
@@ -43,9 +52,12 @@ Plan 4 of 5 (04-04 next)
 - lucide-react para ícones, recharts para gráficos
 - Sidebar state gerenciado internamente pelo SidebarNav (sem prop drilling)
 - Admin layout é Client Component pois SidebarNav usa useState
+- lucide-react nao exporta icone Instagram — substituido por AtSign para representar @username
 
 ## Notas de Sessão
 - 2026-03-27: Iniciando planejamento UI fase 4
 - 2026-03-27: Plan 04-01 concluído — fundação de componentes e api.ts completa
 - 2026-03-28: Plan 04-02 concluído — painel do cliente M5 completo com AccountFilter, ClickChart, ConversationTable e dashboard page
 - 2026-03-28: Plan 04-03 concluído — layout admin com SidebarNav + dashboard M6 com QueueMonitor
+- 2026-03-28: Plan 04-04 concluído — telas de gestao de contas (AccountList, ConfirmModal) e personas (PersonaForm)
+- 2026-03-28: Plan 04-05 concluído — playground de prompts e logs de processamento — Phase 4 COMPLETA
