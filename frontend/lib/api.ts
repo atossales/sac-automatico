@@ -53,7 +53,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...rest,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? JSON.stringify(body) : null,
   });
 
   if (!response.ok) {
@@ -139,4 +139,119 @@ export const analyticsApi = {
 
 export const healthApi = {
   check: () => request<{ status: string; timestamp: string }>('/health'),
+};
+
+// ── Queue ────────────────────────────────────────────────────
+
+export interface QueueStats {
+  waiting: number;
+  active: number;
+  failed: number;
+  completed: number;
+}
+
+export interface QueueJob {
+  id: string;
+  name: string;
+  status: 'waiting' | 'active' | 'completed' | 'failed';
+  data: Record<string, unknown>;
+  failedReason?: string;
+  processedOn?: string;
+  finishedOn?: string;
+  timestamp: string;
+}
+
+export const queueApi = {
+  getStats: (token: string) =>
+    request<{ data: QueueStats }>('/queue/stats', { token }),
+
+  getJobs: (token: string, params?: { status?: string; page?: number; pageSize?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.set('status', params.status);
+    if (params?.page !== undefined) qs.set('page', String(params.page));
+    if (params?.pageSize !== undefined) qs.set('pageSize', String(params.pageSize));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return request<{ data: QueueJob[]; total: number }>(`/queue/jobs${query}`, { token });
+  },
+};
+
+// ── Accounts ─────────────────────────────────────────────────
+
+export interface InstagramAccount {
+  id: string;
+  igUserId: string;
+  username: string;
+  tokenStatus: 'active' | 'expiring' | 'expired';
+  tokenExpiresAt: string;
+  createdAt: string;
+}
+
+export const accountsApi = {
+  list: (token: string) =>
+    request<{ data: InstagramAccount[] }>('/instagram/accounts', { token }),
+
+  getOAuthUrl: (token: string) =>
+    request<{ url: string }>('/instagram/oauth/url', { token }),
+
+  remove: (accountId: string, token: string) =>
+    request<void>(`/instagram/accounts/${accountId}`, { method: 'DELETE', token }),
+};
+
+// ── Personas ─────────────────────────────────────────────────
+
+export interface Persona {
+  id: string;
+  accountId: string;
+  systemPrompt: string;
+  delayMin: number;
+  delayMax: number;
+  updatedAt: string;
+}
+
+export const personasApi = {
+  getByAccount: (accountId: string, token: string) =>
+    request<{ data: Persona }>(`/personas/${accountId}`, { token }),
+
+  update: (accountId: string, token: string, body: { systemPrompt: string; delayMin: number; delayMax: number }) =>
+    request<{ data: Persona }>(`/personas/${accountId}`, { method: 'PUT', token, body }),
+};
+
+// ── Playground ───────────────────────────────────────────────
+
+export interface PlaygroundResponse {
+  response: string;
+  tokensUsed: number;
+  latencyMs: number;
+}
+
+export const playgroundApi = {
+  test: (token: string, body: { accountId: string; message: string }) =>
+    request<{ data: PlaygroundResponse }>('/playground/test', { method: 'POST', token, body }),
+};
+
+// ── Logs ─────────────────────────────────────────────────────
+
+export interface ProcessingLog {
+  id: string;
+  accountId: string;
+  accountUsername: string;
+  conversationId: string;
+  status: 'success' | 'error' | 'timeout';
+  errorMessage?: string;
+  processingTimeMs: number;
+  createdAt: string;
+}
+
+export const logsApi = {
+  list: (token: string, params?: { accountId?: string; status?: string; startDate?: string; endDate?: string; page?: number; pageSize?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.accountId) qs.set('accountId', params.accountId);
+    if (params?.status) qs.set('status', params.status);
+    if (params?.startDate) qs.set('startDate', params.startDate);
+    if (params?.endDate) qs.set('endDate', params.endDate);
+    if (params?.page !== undefined) qs.set('page', String(params.page));
+    if (params?.pageSize !== undefined) qs.set('pageSize', String(params.pageSize));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return request<{ data: ProcessingLog[]; total: number }>(`/logs${query}`, { token });
+  },
 };
