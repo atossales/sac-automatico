@@ -47,7 +47,7 @@ Exceções:
 - Touch targets mínimos: 44px de altura para botões interativos (mobile)
 - Border-left de StatusCard: 4px (decorativo, não espacial)
 
-Fonte: layouts existentes (`padding: 0 24px`, `height: 56px`, `padding: 32px 24px`, `gap: 20px`).
+Fonte: layouts existentes (`padding: 0 24px`, `height: 56px`, `padding: 32px 24px`). Gap do grid de métricas corrigido de 20px para `lg` (24px) — 20px não é múltiplo válido da escala.
 
 ---
 
@@ -55,14 +55,17 @@ Fonte: layouts existentes (`padding: 0 24px`, `height: 56px`, `padding: 32px 24p
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Body | 14px (0.875rem) | 400 regular | 1.6 | Texto descritivo, células de tabela, copy de suporte |
 | Label | 12px (0.75rem) | 400 regular | 1.4 | Títulos de métrica, labels de campo, badges |
-| Heading | 18px (1.1rem) | 600 semibold | 1.3 | Títulos de seção, cabeçalhos de card |
-| Display | 28px (1.75rem) | 700 bold | 1.2 | Título principal de página (h1) |
+| Body | 14px (0.875rem) | 400 regular | 1.6 | Texto descritivo, células de tabela, copy de suporte |
+| Heading | 18px (1.1rem) | 700 bold | 1.3 | Títulos de seção, cabeçalhos de card |
+| Display | 28px (1.75rem) | 700 bold | 1.2 | Título principal de página (h1) e valores grandes de métrica |
 
-Valores de métricas grandes (ex: contagem total): 32px (2rem), weight 700 — já estabelecido nos placeholders existentes.
+Notas de consolidação:
+- Valores numéricos grandes de métricas (ex: contagem total) usam Display (28px, weight 700) — mesmos atributos, sem necessidade de escala extra 32px.
+- Peso 600 (semibold) removido — todos os papéis de destaque usam 700 (bold).
+- Apenas 2 pesos declarados: 400 e 700.
 
-Fonte: dashboards existentes (`fontSize: '1.75rem', fontWeight: 700` para h1; `fontSize: '1.1rem', fontWeight: 600` para h2; `fontSize: '0.8rem'` para labels de card; `fontSize: '2rem', fontWeight: 700` para valores).
+Fonte: dashboards existentes (`fontSize: '1.75rem', fontWeight: 700` para h1; `fontSize: '1.1rem', fontWeight: 600` normalizado para 700; `fontSize: '0.8rem'` para labels de card; `fontSize: '2rem', fontWeight: 700` consolidado em Display).
 
 ---
 
@@ -104,9 +107,10 @@ Fonte: globals.css + layouts existentes.
 - Nav: brand "SAC Automático" + badge "Relatórios" (cor `#0ea5e9`)
 - Sem sidebar — navegação é mínima (apenas dashboard)
 - Seletor de conta Instagram: `<select>` ou grupo de botões filtro logo abaixo do h1, antes dos cards
-- Grid de métricas: `repeat(auto-fill, minmax(240px, 1fr))`, gap 20px
+- Grid de métricas: `repeat(auto-fill, minmax(240px, 1fr))`, gap `lg` (24px)
 - Gráfico de série temporal: bloco de largura total, altura 240px, abaixo dos cards de métrica
 - Lista de conversas: tabela com paginação simples (Anterior / Próxima), 20 itens por página
+- Primary focal point: h1 + metric cards grid
 
 ### M6 — Painel do Gestor (admin completo)
 - Layout: sidebar esquerda (240px fixo em desktop) + top nav (56px) + área de conteúdo
@@ -120,6 +124,7 @@ Fonte: globals.css + layouts existentes.
 - Max-width da área de conteúdo: 1280px
 - Monitor de fila: polling a cada 10s via `useEffect` + `setInterval` (Client Component)
 - Playground: textarea de entrada + botão "Testar" + área de resposta abaixo
+- Primary focal point: h1 + system status row
 
 ---
 
@@ -205,7 +210,7 @@ Cada componente de dados deve implementar explicitamente os quatro estados abaix
 | Botão de cancelamento | Cancelar |
 | Fila — estado "operacional" | Sistema operacional |
 | Fila — estado "jobs com falha" | {N} job(s) com falha |
-| Fila — estado "sem conexão" | Não foi possível ler o estado da fila |
+| Fila — estado "sem conexão" | Não foi possível ler o estado da fila. Verifique se o Redis está em execução. |
 | Monitor — label jobs pendentes | Aguardando |
 | Monitor — label jobs ativos | Processando |
 | Monitor — label jobs com falha | Com falha |
@@ -220,8 +225,9 @@ Cada componente de dados deve implementar explicitamente os quatro estados abaix
 | Logs — filtro data | Período |
 | Empty state — sem contas (heading) | Nenhuma conta conectada |
 | Empty state — sem contas (body) | Clique em "Conectar conta Instagram" para adicionar a primeira conta Business. |
-| Empty state — sem logs | Nenhum log encontrado para os filtros selecionados |
-| Error state genérico | Erro ao carregar. Tente novamente. |
+| Empty state — sem logs (heading) | Nenhum log encontrado para os filtros selecionados |
+| Empty state — sem logs (body) | Ajuste os filtros acima ou selecione um período maior. |
+| Error state genérico | Não foi possível carregar os dados. Tente novamente. |
 | Token válido | Token ativo |
 | Token próximo do vencimento | Expira em {N} dias |
 | Token expirado | Token expirado |
