@@ -1,10 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getToken } from '@/lib/auth';
 import { PromptPlayground } from '@/components/PromptPlayground';
 
-export default function PlaygroundPage(): JSX.Element {
-  // TODO: obter token de autenticacao
-  const token = '';
+export default function PlaygroundPage(): JSX.Element | null {
+  const router = useRouter();
+  const token = getToken();
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/auth/login');
+    }
+  }, [token, router]);
+
+  if (!token) return null;
 
   return (
     <div>

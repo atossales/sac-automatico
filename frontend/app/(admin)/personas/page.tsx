@@ -1,22 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { accountsApi, type InstagramAccount, ApiError } from '@/lib/api';
+import { getToken } from '@/lib/auth';
 import { PersonaForm } from '@/components/PersonaForm';
 import { EmptyState } from '@/components/EmptyState';
 import { Skeleton } from '@/components/Skeleton';
 import { Banner } from '@/components/Banner';
 import { AtSign } from 'lucide-react';
 
-export default function PersonasPage(): JSX.Element {
-  // TODO: obter token de autenticacao
-  const token = '';
+export default function PersonasPage(): JSX.Element | null {
+  const router = useRouter();
+  const token = getToken();
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/auth/login');
+    }
+  }, [token, router]);
 
   const [accounts, setAccounts] = useState<InstagramAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!token) return;
     accountsApi
       .list(token)
       .then((res) => setAccounts(res.data))
@@ -26,6 +35,8 @@ export default function PersonasPage(): JSX.Element {
       })
       .finally(() => setLoading(false));
   }, [token]);
+
+  if (!token) return null;
 
   return (
     <div>

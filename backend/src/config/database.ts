@@ -22,17 +22,23 @@ export const prisma =
           ],
   });
 
+type PrismaQueryEvent = { query: string; params: string; duration: number };
+type PrismaLogEvent = { message: string };
+
 if (env.NODE_ENV === 'development') {
-  prisma.$on('query', (e) => {
-    logger.debug({ query: e.query, params: e.params, duration: e.duration }, 'Prisma query');
-  });
+  (prisma.$on as (event: string, cb: (e: PrismaQueryEvent) => void) => void)(
+    'query',
+    (e) => {
+      logger.debug({ query: e.query, params: e.params, duration: e.duration }, 'Prisma query');
+    },
+  );
 }
 
-prisma.$on('warn', (e) => {
+(prisma.$on as (event: string, cb: (e: PrismaLogEvent) => void) => void)('warn', (e) => {
   logger.warn({ message: e.message }, 'Prisma warning');
 });
 
-prisma.$on('error', (e) => {
+(prisma.$on as (event: string, cb: (e: PrismaLogEvent) => void) => void)('error', (e) => {
   logger.error({ message: e.message }, 'Prisma error');
 });
 
