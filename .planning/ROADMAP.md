@@ -25,11 +25,11 @@
 
 ### Phase 4: Frontend — Paineis M5 e M6
 **Goal:** Interfaces web completas para cliente (read-only) e gestor (admin) com dark theme, componentes custom e integracao com API backend.
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 **Requirements:** [FE-01, FE-02, FE-03, FE-04, FE-05, FE-06]
 
 Plans:
-- [ ] 04-01-PLAN.md — Setup: instalar deps, componentes compartilhados, estender api.ts
+- [x] 04-01-PLAN.md — Setup: instalar deps, componentes compartilhados, estender api.ts
 - [ ] 04-02-PLAN.md — M5: Dashboard do cliente (metricas, grafico, conversas)
 - [ ] 04-03-PLAN.md — M6: Layout admin com sidebar + dashboard com QueueMonitor
 - [ ] 04-04-PLAN.md — M6: Contas Instagram + Personas
