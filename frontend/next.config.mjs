@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Habilita output standalone para build Docker otimizado
+  output: 'standalone',
+
   // Expõe variáveis de ambiente públicas para o client
   env: {
     NEXT_PUBLIC_API_URL: process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001',
