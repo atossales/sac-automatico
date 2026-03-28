@@ -4,14 +4,14 @@
 Phase 4 — Frontend (M5 + M6)
 
 ## Current Plan
-Plan 2 of 5 (04-02 next)
+Plan 3 of 5 (04-03 next)
 
 ## Progress
-[##########..........] 2/5 plans complete in phase 4
+[############........] 3/5 plans complete in phase 4
 
 ## Status
 - Phases 1–3: Backend bootstrapado com estrutura completa
-- Phase 4: Em execução — plan 04-01 concluído
+- Phase 4: Em execução — plans 04-01 e 04-02 concluídos
 
 ## Frontend Atual
 - `frontend/app/globals.css` — dark theme com CSS variables + @keyframes skeleton-pulse
@@ -21,8 +21,11 @@ Plan 2 of 5 (04-02 next)
 - `frontend/components/Skeleton.tsx` — skeleton loading animado
 - `frontend/components/Banner.tsx` — banner de sucesso/erro temporário (Client Component)
 - `frontend/components/EmptyState.tsx` — estado vazio com ícone e texto
+- `frontend/components/AccountFilter.tsx` — seletor de conta Instagram (M5, Client Component)
+- `frontend/components/ClickChart.tsx` — gráfico de série temporal com recharts (M5, Client Component)
+- `frontend/components/ConversationTable.tsx` — tabela paginada de conversas (M5, Client Component)
 - `frontend/app/(admin)/` — layout e dashboard placeholder
-- `frontend/app/(client)/` — layout e dashboard placeholder
+- `frontend/app/(client)/dashboard/page.tsx` — painel do cliente M5 completo (Client Component)
 - `frontend/app/auth/callback/` — placeholder OAuth callback
 
 ## Decisões Tomadas
@@ -39,3 +42,4 @@ Plan 2 of 5 (04-02 next)
 ## Notas de Sessão
 - 2026-03-27: Iniciando planejamento UI fase 4
 - 2026-03-27: Plan 04-01 concluído — fundação de componentes e api.ts completa
+- 2026-03-28: Plan 04-02 concluído — painel do cliente M5 completo com AccountFilter, ClickChart, ConversationTable e dashboard page
