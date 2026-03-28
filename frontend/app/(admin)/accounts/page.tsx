@@ -1,10 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getToken } from '@/lib/auth';
 import { AccountList } from '@/components/AccountList';
 
-export default function AccountsPage(): JSX.Element {
-  // TODO: obter token de autenticacao
-  const token = '';
+export default function AccountsPage(): JSX.Element | null {
+  const router = useRouter();
+  const token = getToken();
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/auth/login');
+    }
+  }, [token, router]);
+
+  if (!token) return null;
 
   return (
     <div>

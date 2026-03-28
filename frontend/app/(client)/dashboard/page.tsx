@@ -1,8 +1,9 @@
 'use client';
 
-// TODO: obter token de autenticacao
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { analyticsApi, type AccountSummary, ApiError } from '@/lib/api';
+import { getToken } from '@/lib/auth';
 import { MetricCard } from '@/components/MetricCard';
 import { AccountFilter } from '@/components/AccountFilter';
 import { ClickChart } from '@/components/ClickChart';
@@ -10,13 +11,22 @@ import { ConversationTable } from '@/components/ConversationTable';
 import { EmptyState } from '@/components/EmptyState';
 import { Skeleton } from '@/components/Skeleton';
 
-export default function ClientDashboardPage(): JSX.Element {
+export default function ClientDashboardPage(): JSX.Element | null {
+  const router = useRouter();
+  const token = getToken();
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/auth/login');
+    }
+  }, [token, router]);
+
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const token = '';
+  if (!token) return null;
 
   async function fetchAccounts(): Promise<void> {
     setLoading(true);

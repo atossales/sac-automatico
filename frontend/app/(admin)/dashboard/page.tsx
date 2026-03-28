@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { healthApi, queueApi, type QueueStats } from '@/lib/api';
+import { getToken } from '@/lib/auth';
 import { StatusCard } from '@/components/StatusCard';
 import { QueueMonitor } from '@/components/QueueMonitor';
 import { Skeleton } from '@/components/Skeleton';
@@ -10,9 +12,17 @@ import { Skeleton } from '@/components/Skeleton';
  * Dashboard do Gestor — Módulo 6.
  * Exibe status do sistema e monitor de fila BullMQ em tempo real.
  */
-export default function AdminDashboardPage(): JSX.Element {
-  // TODO: obter token de autenticacao
-  const token = '';
+export default function AdminDashboardPage(): JSX.Element | null {
+  const router = useRouter();
+  const token = getToken();
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/auth/login');
+    }
+  }, [token, router]);
+
+  if (!token) return null;
 
   const [healthStatus, setHealthStatus] = useState<string | null>(null);
   const [stats, setStats] = useState<QueueStats | null>(null);
