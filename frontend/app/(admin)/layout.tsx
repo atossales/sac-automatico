@@ -1,12 +1,7 @@
-import type { ReactNode } from 'react';
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: {
-    template: '%s | SAC Automático — Gestor',
-    default: 'Painel do Gestor',
-  },
-};
+import type { ReactNode } from 'react';
+import { SidebarNav } from '@/components/SidebarNav';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -14,8 +9,8 @@ interface AdminLayoutProps {
 
 /**
  * Layout do painel do gestor.
- * Autenticação e proteção de rota serão implementadas na Fase 4 (M6).
- * Por enquanto, encapsula o conteúdo com a estrutura visual base.
+ * Autenticação e proteção de rota serão implementadas em fase posterior.
+ * Sidebar com 5 itens de navegação + top nav.
  */
 export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element {
   return (
@@ -24,7 +19,10 @@ export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element
         <div className="admin-nav__brand">SAC Automático</div>
         <div className="admin-nav__badge">Gestor</div>
       </nav>
-      <main className="admin-main">{children}</main>
+      <div className="admin-body">
+        <SidebarNav />
+        <main className="admin-main">{children}</main>
+      </div>
       <style>{`
         .admin-layout {
           display: flex;
@@ -40,6 +38,9 @@ export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element
           height: 56px;
           background: var(--color-surface);
           border-bottom: 1px solid var(--color-border);
+          position: sticky;
+          top: 0;
+          z-index: 20;
         }
         .admin-nav__brand {
           font-weight: 700;
@@ -52,14 +53,23 @@ export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element
           border-radius: 999px;
           background: var(--color-primary);
           color: white;
-          font-weight: 600;
+          font-weight: 700;
+        }
+        .admin-body {
+          display: flex;
+          flex: 1;
+          min-height: calc(100vh - 56px);
         }
         .admin-main {
           flex: 1;
           padding: 32px 24px;
           max-width: 1280px;
-          margin: 0 auto;
           width: 100%;
+        }
+        @media (max-width: 767px) {
+          .admin-main {
+            padding: 72px 16px 32px;
+          }
         }
       `}</style>
     </div>
