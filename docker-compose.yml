@@ -3,90 +3,65 @@ version: '3.9'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: sac-postgres
-    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-sac_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sac_password}
-      POSTGRES_DB: ${POSTGRES_DB:-sac_automatico}
-    ports:
-      - '5432:5432'
+      POSTGRES_DB: sac_automatico
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-sac_user} -d ${POSTGRES_DB:-sac_automatico}']
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    container_name: sac-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-sac_redis_password}
-    ports:
-      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-sac_redis_password}', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: sac-backend
-    restart: unless-stopped
-    env_file: .env
+    build: ./backend
     ports:
-      - '${PORT:-3001}:${PORT:-3001}'
+      - "${PORT:-3001}:3001"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/sac_automatico
+      REDIS_URL: redis://redis:6379
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      META_APP_ID: ${META_APP_ID}
+      META_APP_SECRET: ${META_APP_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: npm run dev
+    restart: unless-stopped
+    command: sh -c "npx prisma migrate deploy && node dist/app.js"
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: sac-frontend
-    restart: unless-stopped
-    env_file: .env
+    build: ./frontend
     ports:
-      - '3000:3000'
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    command: npm run dev
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: sac-pgadmin
     restart: unless-stopped
-    profiles:
-      - tools
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@sac.local}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
-    ports:
-      - '5050:80'
-    depends_on:
-      - postgres
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
 
 volumes:
   postgres_data:
   redis_data:
-  pgadmin_data:
