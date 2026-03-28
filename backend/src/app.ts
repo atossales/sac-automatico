@@ -24,7 +24,7 @@ const app = express();
 // ── Preservação do body bruto para validação HMAC ────────────
 // DEVE vir antes de qualquer parser de body.
 // O rawBody é necessário para calcular a assinatura HMAC dos webhooks da Meta.
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   if (req.path.startsWith('/instagram/webhook') && req.method === 'POST') {
     let rawBody = Buffer.alloc(0);
 

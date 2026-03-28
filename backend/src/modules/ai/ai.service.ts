@@ -83,7 +83,10 @@ export async function generateResponse(
       'Resposta gerada pelo Gemini',
     );
 
-    return { response: text.trim(), tokensUsed };
+    return {
+      response: text.trim(),
+      ...(tokensUsed !== undefined && { tokensUsed }),
+    };
   } catch (err) {
     if (err instanceof AppError) throw err;
 

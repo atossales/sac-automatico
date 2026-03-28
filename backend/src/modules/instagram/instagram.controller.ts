@@ -36,7 +36,7 @@ export async function verifyWebhook(req: Request, res: Response, next: NextFunct
  * Recebe eventos de DM do Instagram.
  * A validação HMAC já foi feita pelo middleware validateMetaHmac.
  */
-export async function receiveWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function receiveWebhook(req: Request, res: Response, _next: NextFunction): Promise<void> {
   // Responde imediatamente para evitar timeout da Meta (máx. 20s)
   res.status(200).json({ status: 'ok' });
 
