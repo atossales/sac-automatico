@@ -146,7 +146,7 @@ Todos são componentes custom sem biblioteca externa, exceto lucide-react para �
 | `SidebarNav` | Navegação lateral do M6 | Client Component (estado ativo) |
 | `AccountFilter` | Seletor de conta para filtrar dados no M5 | Client Component |
 
-Biblioteca de gráficos: `recharts` (instalar: `npm install recharts @types/recharts` — compatível com React 18, leve, sem dependências pesadas).
+Biblioteca de gráficos: `recharts` (instalar: `npm install recharts` — compatível com React 18, leve, sem dependências pesadas).
 
 ---
 
