@@ -23,9 +23,9 @@
 - Registro de cliques por link
 - Gatilhos: boas-vindas, resposta a story, palavra-chave
 
-### Phase 4: Frontend — Paineis M5 e M6
+### Phase 4: Frontend — Paineis M5 e M6 ✅
 **Goal:** Interfaces web completas para cliente (read-only) e gestor (admin) com dark theme, componentes custom e integracao com API backend.
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans executed
 **Requirements:** [FE-01, FE-02, FE-03, FE-04, FE-05, FE-06]
 
 Plans:
@@ -33,7 +33,7 @@ Plans:
 - [x] 04-02-PLAN.md — M5: Dashboard do cliente (metricas, grafico, conversas)
 - [x] 04-03-PLAN.md — M6: Layout admin com sidebar + dashboard com QueueMonitor
 - [x] 04-04-PLAN.md — M6: Contas Instagram + Personas
-- [ ] 04-05-PLAN.md — M6: Playground de prompts + Logs de processamento
+- [x] 04-05-PLAN.md — M6: Playground de prompts + Logs de processamento
 
 **M5 — Painel do Cliente (read-only):**
 - Dashboard com metricas globais (conversas, mensagens, cliques)
