@@ -21,6 +21,8 @@ model Account {
   tokenExpiresAt DateTime
   pageId         String    @unique
   systemPrompt   String    @default("Você é um atendente educado e prestativo.")
+  delayMin       Int       @default(3)   // Delay mínimo em segundos para simular digitação humana
+  delayMax       Int       @default(12)  // Delay máximo em segundos para simular digitação humana
   isActive       Boolean   @default(true)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

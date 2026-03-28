@@ -7,8 +7,13 @@ import { connectRedis, disconnectRedis } from './config/redis.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { instagramRouter } from './modules/instagram/instagram.routes.js';
+import { accountsRouter } from './modules/instagram/accounts.routes.js';
 import { trackerRouter } from './modules/tracker/tracker.routes.js';
 import { analyticsRouter } from './modules/analytics/analytics.routes.js';
+import { queueRouter } from './modules/queue/queue.routes.js';
+import { personasRouter } from './modules/personas/personas.routes.js';
+import { playgroundRouter } from './modules/playground/playground.routes.js';
+import { logsRouter } from './modules/logs/logs.routes.js';
 import { queueService } from './modules/queue/queue.service.js';
 import { startMessageWorker, stopMessageWorker } from './modules/queue/workers/message.worker.js';
 import { startTokenRefreshJob } from './jobs/token-refresh.job.js';
@@ -92,8 +97,13 @@ app.get('/health', (_req: Request, res: Response) => {
 // ── Rotas ─────────────────────────────────────────────────────
 app.use('/auth', authRouter);
 app.use('/instagram', instagramRouter);
+app.use('/instagram', accountsRouter);
 app.use('/t', trackerRouter);
 app.use('/analytics', analyticsRouter);
+app.use('/queue', queueRouter);
+app.use('/personas', personasRouter);
+app.use('/playground', playgroundRouter);
+app.use('/logs', logsRouter);
 
 // ── 404 ───────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {
