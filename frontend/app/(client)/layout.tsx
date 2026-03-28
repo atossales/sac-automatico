@@ -1,17 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { Metadata } from 'next';
 import { logout } from '@/lib/auth';
-
-// metadata só funciona em Server Components — mantido como referência mas não exportado
-// quando o layout for convertido de volta para Server Component
-const _metadata: Metadata = {
-  title: {
-    template: '%s | SAC Automático — Relatórios',
-    default: 'Relatórios',
-  },
-};
 
 interface ClientLayoutProps {
   children: ReactNode;

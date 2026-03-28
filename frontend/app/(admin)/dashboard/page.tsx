@@ -16,23 +16,24 @@ export default function AdminDashboardPage(): JSX.Element | null {
   const router = useRouter();
   const token = getToken();
 
+  const [healthStatus, setHealthStatus] = useState<string | null>(null);
+  const [stats, setStats] = useState<QueueStats | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+
   useEffect(() => {
     if (!token) {
       router.push('/auth/login');
     }
   }, [token, router]);
 
-  if (!token) return null;
-
-  const [healthStatus, setHealthStatus] = useState<string | null>(null);
-  const [stats, setStats] = useState<QueueStats | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState(true);
-
   useEffect(() => {
+    if (!token) return;
+    const currentToken = token;
+
     async function fetchInitialData(): Promise<void> {
       const [healthResult, statsResult] = await Promise.allSettled([
         healthApi.check(),
-        queueApi.getStats(token),
+        queueApi.getStats(currentToken),
       ]);
 
       if (healthResult.status === 'fulfilled') {
@@ -51,7 +52,9 @@ export default function AdminDashboardPage(): JSX.Element | null {
     }
 
     void fetchInitialData();
-  }, []);
+  }, [token]);
+
+  if (!token) return null;
 
   const successRate =
     stats !== null && stats.completed > 0

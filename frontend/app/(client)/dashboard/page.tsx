@@ -15,40 +15,42 @@ export default function ClientDashboardPage(): JSX.Element | null {
   const router = useRouter();
   const token = getToken();
 
+  const [accounts, setAccounts] = useState<AccountSummary[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!token) {
       router.push('/auth/login');
     }
   }, [token, router]);
 
-  const [accounts, setAccounts] = useState<AccountSummary[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!token) return;
+    const currentToken = token;
+
+    async function fetchAccounts(): Promise<void> {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await analyticsApi.getAllSummary(currentToken);
+        setAccounts(result.data);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          window.location.href = '/auth/login';
+          return;
+        }
+        setError('Nao foi possivel carregar os dados. Verifique a conexao e tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void fetchAccounts();
+  }, [token]);
 
   if (!token) return null;
-
-  async function fetchAccounts(): Promise<void> {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await analyticsApi.getAllSummary(token);
-      setAccounts(result.data);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        window.location.href = '/auth/login';
-        return;
-      }
-      setError('Nao foi possivel carregar os dados. Verifique a conexao e tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void fetchAccounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Calcula metricas agregadas ou por conta selecionada
   const selectedAccount = selectedAccountId !== null
@@ -66,6 +68,25 @@ export default function ClientDashboardPage(): JSX.Element | null {
   const totalClicks = selectedAccount !== null && selectedAccount !== undefined
     ? selectedAccount.totalClicks
     : accounts.reduce((sum, a) => sum + a.totalClicks, 0);
+
+  async function handleRetry(): Promise<void> {
+    if (!token) return;
+    const currentToken = token;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await analyticsApi.getAllSummary(currentToken);
+      setAccounts(result.data);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        window.location.href = '/auth/login';
+        return;
+      }
+      setError('Nao foi possivel carregar os dados. Verifique a conexao e tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div>
@@ -119,7 +140,7 @@ export default function ClientDashboardPage(): JSX.Element | null {
           </p>
           <button
             type="button"
-            onClick={() => void fetchAccounts()}
+            onClick={() => void handleRetry()}
             style={{
               padding: '8px 16px',
               border: '1px solid var(--color-error)',

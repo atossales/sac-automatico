@@ -13,6 +13,8 @@ beforeAll(() => {
   process.env['JWT_SECRET'] = 'test_jwt_secret_with_at_least_32_characters_long';
   process.env['JWT_REFRESH_SECRET'] = 'test_jwt_refresh_secret_with_at_least_32_chars';
   process.env['TOKEN_ENCRYPTION_KEY'] = 'a'.repeat(64);
+  process.env['ADMIN_USERNAME'] = 'test_admin';
+  process.env['ADMIN_PASSWORD'] = 'test_admin_password_hash';
   process.env['TRACKER_BASE_URL'] = 'https://test.example.com/t';
   process.env['FRONTEND_URL'] = 'http://localhost:3000';
 });

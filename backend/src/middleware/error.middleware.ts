@@ -33,7 +33,6 @@ function buildErrorResponse(message: string, code?: string, details?: unknown): 
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorMiddleware(
   err: unknown,
   req: Request,
