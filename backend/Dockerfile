@@ -6,7 +6,7 @@ RUN apk add --no-cache openssl
 # ── Estágio de build ─────────────────────────────────────────
 FROM base AS builder
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 RUN npx prisma generate
 RUN npm run build
