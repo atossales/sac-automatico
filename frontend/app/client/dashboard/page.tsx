@@ -13,7 +13,8 @@ import { Skeleton } from '@/components/Skeleton';
 
 export default function ClientDashboardPage(): JSX.Element | null {
   const router = useRouter();
-  const token = getToken();
+  const [token, setToken] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
@@ -21,10 +22,13 @@ export default function ClientDashboardPage(): JSX.Element | null {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) {
+    const t = getToken();
+    setToken(t);
+    setMounted(true);
+    if (!t) {
       router.push('/auth/login');
     }
-  }, [token, router]);
+  }, [router]);
 
   useEffect(() => {
     if (!token) return;
@@ -50,6 +54,7 @@ export default function ClientDashboardPage(): JSX.Element | null {
     void fetchAccounts();
   }, [token]);
 
+  if (!mounted) return null;
   if (!token) return null;
 
   // Calcula metricas agregadas ou por conta selecionada

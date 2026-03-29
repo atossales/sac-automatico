@@ -14,17 +14,21 @@ import { Skeleton } from '@/components/Skeleton';
  */
 export default function AdminDashboardPage(): JSX.Element | null {
   const router = useRouter();
-  const token = getToken();
+  const [token, setToken] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const [healthStatus, setHealthStatus] = useState<string | null>(null);
   const [stats, setStats] = useState<QueueStats | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
 
   useEffect(() => {
-    if (!token) {
+    const t = getToken();
+    setToken(t);
+    setMounted(true);
+    if (!t) {
       router.push('/auth/login');
     }
-  }, [token, router]);
+  }, [router]);
 
   useEffect(() => {
     if (!token) return;
@@ -54,6 +58,7 @@ export default function AdminDashboardPage(): JSX.Element | null {
     void fetchInitialData();
   }, [token]);
 
+  if (!mounted) return null;
   if (!token) return null;
 
   const successRate =

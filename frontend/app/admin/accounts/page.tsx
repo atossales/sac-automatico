@@ -1,20 +1,25 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getToken } from '@/lib/auth';
 import { AccountList } from '@/components/AccountList';
 
 export default function AccountsPage(): JSX.Element | null {
   const router = useRouter();
-  const token = getToken();
+  const [token, setToken] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!token) {
+    const t = getToken();
+    setToken(t);
+    setMounted(true);
+    if (!t) {
       router.push('/auth/login');
     }
-  }, [token, router]);
+  }, [router]);
 
+  if (!mounted) return null;
   if (!token) return null;
 
   return (

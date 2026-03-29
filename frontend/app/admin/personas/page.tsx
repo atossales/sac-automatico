@@ -12,17 +12,20 @@ import { AtSign } from 'lucide-react';
 
 export default function PersonasPage(): JSX.Element | null {
   const router = useRouter();
-  const token = getToken();
-
-  useEffect(() => {
-    if (!token) {
-      router.push('/auth/login');
-    }
-  }, [token, router]);
-
+  const [token, setToken] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [accounts, setAccounts] = useState<InstagramAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = getToken();
+    setToken(t);
+    setMounted(true);
+    if (!t) {
+      router.push('/auth/login');
+    }
+  }, [router]);
 
   useEffect(() => {
     if (!token) return;
@@ -36,6 +39,7 @@ export default function PersonasPage(): JSX.Element | null {
       .finally(() => setLoading(false));
   }, [token]);
 
+  if (!mounted) return null;
   if (!token) return null;
 
   return (
