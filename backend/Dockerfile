@@ -7,7 +7,7 @@ RUN apk add --no-cache openssl
 # ── Estágio de dependências ──────────────────────────────────
 FROM base AS deps
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # ── Estágio de build ─────────────────────────────────────────
 FROM base AS builder
