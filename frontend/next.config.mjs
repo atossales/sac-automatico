@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Habilita output standalone para build Docker otimizado
-  output: 'standalone',
+  // standalone apenas para builds Docker (não Netlify)
+  ...(process.env.DOCKER_BUILD === 'true' ? { output: 'standalone' } : {}),
 
   // Expõe variáveis de ambiente públicas para o client
   env: {
