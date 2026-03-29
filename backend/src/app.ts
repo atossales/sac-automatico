@@ -168,6 +168,9 @@ async function bootstrap(): Promise<void> {
     });
   } catch (err) {
     logger.error({ err }, 'Falha ao inicializar o servidor');
+    // Log legível para debug em produção
+    console.error('ERRO DE INICIALIZAÇÃO:', err instanceof Error ? err.message : String(err));
+    if (err instanceof Error && err.stack) console.error(err.stack);
     process.exit(1);
   }
 }
