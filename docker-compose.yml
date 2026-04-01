@@ -22,10 +22,11 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-sac_redis_password}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-sac_redis_password}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,15 +39,20 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/sac_automatico
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-sac_redis_password}@redis:6379
       PORT: 3001
       JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       META_APP_ID: ${META_APP_ID}
       META_APP_SECRET: ${META_APP_SECRET}
+      META_WEBHOOK_VERIFY_TOKEN: ${META_WEBHOOK_VERIFY_TOKEN}
+      META_WEBHOOK_SECRET: ${META_WEBHOOK_SECRET}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
+      TRACKER_BASE_URL: ${TRACKER_BASE_URL:-http://localhost:3001/t}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     depends_on:
       postgres:

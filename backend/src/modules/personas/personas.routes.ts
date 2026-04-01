@@ -13,7 +13,7 @@ const accountIdSchema = z.object({
 });
 
 const upsertPersonaSchema = z.object({
-  systemPrompt: z.string(),
+  systemPrompt: z.string().min(1, 'System prompt não pode ser vazio'),
   delayMin: z.number().int().min(1).max(30),
   delayMax: z.number().int().min(1).max(30),
 }).refine(

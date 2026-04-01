@@ -43,8 +43,14 @@ export async function exchangeToken(
 }
 
 /**
- * Renova o token de acesso de uma conta Instagram antes que expire.
- * Tokens do Instagram expiram em 60 dias — renovar a cada 55 dias (via cron job).
+ * Renova o token de acesso de uma conta Instagram Business antes que expire.
+ *
+ * Para Instagram Business via Facebook Login, o fluxo correto é:
+ * GET /oauth/access_token?grant_type=fb_exchange_token&client_id=...&client_secret=...&fb_exchange_token=...
+ *
+ * NOTA: Page Access Tokens obtidos com um User Access Token de longa duração
+ * são permanentes (não expiram). Nesse caso, a renovação não é necessária.
+ * Verificamos tokenExpiresAt antes de tentar renovar.
  */
 export async function refreshToken(accountId: string): Promise<void> {
   const account = await prisma.account.findUnique({ where: { id: accountId } });
@@ -53,11 +59,33 @@ export async function refreshToken(accountId: string): Promise<void> {
     throw new AppError(404, `Conta não encontrada: ${accountId}`, 'ACCOUNT_NOT_FOUND');
   }
 
+  // Page Access Tokens permanentes não precisam de renovação
+  if (!account.tokenExpiresAt) {
+    logger.info(
+      { accountId },
+      'Token é permanente (Page Access Token sem expiração) — renovação ignorada',
+    );
+    return;
+  }
+
+  // Se faltam mais de 5 dias para expirar, não renova ainda
+  const fiveDaysMs = 5 * 24 * 60 * 60 * 1000;
+  if (account.tokenExpiresAt.getTime() - Date.now() > fiveDaysMs) {
+    logger.info(
+      { accountId, expiresAt: account.tokenExpiresAt },
+      'Token ainda válido por mais de 5 dias — renovação adiada',
+    );
+    return;
+  }
+
   const currentToken = decryptToken(account.accessToken);
 
-  const url = new URL(`${GRAPH_API_BASE}/refresh_access_token`);
-  url.searchParams.set('grant_type', 'ig_refresh_token');
-  url.searchParams.set('access_token', currentToken);
+  // Endpoint correto para Facebook Login / Instagram Business tokens
+  const url = new URL(`${GRAPH_API_BASE}/oauth/access_token`);
+  url.searchParams.set('grant_type', 'fb_exchange_token');
+  url.searchParams.set('client_id', env.META_APP_ID);
+  url.searchParams.set('client_secret', env.META_APP_SECRET);
+  url.searchParams.set('fb_exchange_token', currentToken);
 
   const response = await fetch(url.toString());
 
@@ -228,16 +256,35 @@ export async function findAccountByPageId(pageId: string): Promise<string | null
  * Retorna o system prompt configurado para uma conta.
  */
 export async function getSystemPrompt(accountId: string): Promise<string> {
+  const config = await getAccountConfig(accountId);
+  return config.systemPrompt;
+}
+
+export interface AccountConfig {
+  systemPrompt: string;
+  delayMin: number;
+  delayMax: number;
+}
+
+/**
+ * Retorna a configuração de persona da conta (system prompt + delays).
+ * Usada pelo worker para aplicar delay humanizado por conta.
+ */
+export async function getAccountConfig(accountId: string): Promise<AccountConfig> {
   const account = await prisma.account.findUnique({
     where: { id: accountId },
-    select: { systemPrompt: true },
+    select: { systemPrompt: true, delayMin: true, delayMax: true },
   });
 
   if (!account) {
     throw new AppError(404, `Conta não encontrada: ${accountId}`, 'ACCOUNT_NOT_FOUND');
   }
 
-  return account.systemPrompt;
+  return {
+    systemPrompt: account.systemPrompt,
+    delayMin: account.delayMin,
+    delayMax: account.delayMax,
+  };
 }
 
 /**

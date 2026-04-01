@@ -6,6 +6,19 @@ import type { AiMessage, AiGenerateResult } from './ai.types.js';
 
 const MODEL_NAME = 'gemini-2.0-flash';
 
+/** Tamanho mínimo de resposta para considerar válida (abaixo disso pode indicar falha) */
+const MIN_RESPONSE_LENGTH = 20;
+
+/** Frases que indicam que a IA não soube responder e o caso deve ser escalado */
+const ESCALATION_PATTERNS: RegExp[] = [
+  /n[ãa]o\s+(sei|consigo|posso)\s+(responder|ajudar|informar)/i,
+  /entre\s+em\s+contato/i,
+  /fale\s+com\s+(um|o)\s+(atendente|humano|suporte)/i,
+  /n[ãa]o\s+tenho\s+(essa|esta)\s+informa[çc][ãa]o/i,
+  /preciso\s+transferir/i,
+  /encaminhar\s+(voc[eê]|sua\s+mensagem)/i,
+];
+
 // Instância singleton do cliente Gemini
 let geminiClient: GoogleGenerativeAI | null = null;
 
@@ -78,14 +91,27 @@ export async function generateResponse(
 
     const tokensUsed = response.usageMetadata?.totalTokenCount;
 
-    logger.debug(
-      { tokensUsed, responseLength: text.length },
-      'Resposta gerada pelo Gemini',
-    );
+    const trimmedResponse = text.trim();
+
+    // Detecta se a IA sinalizou não saber responder (escalada graciosa)
+    const escalated = detectEscalation(trimmedResponse);
+
+    if (escalated) {
+      logger.warn(
+        { responseLength: trimmedResponse.length, tokensUsed },
+        'Resposta da IA indica necessidade de escalada humana',
+      );
+    } else {
+      logger.debug(
+        { tokensUsed, responseLength: trimmedResponse.length },
+        'Resposta gerada pelo Gemini',
+      );
+    }
 
     return {
-      response: text.trim(),
+      response: trimmedResponse,
       ...(tokensUsed !== undefined && { tokensUsed }),
+      ...(escalated && { escalated }),
     };
   } catch (err) {
     if (err instanceof AppError) throw err;
@@ -111,4 +137,20 @@ export async function generateResponse(
     logger.error({ err: error }, 'Erro inesperado ao chamar API do Gemini');
     throw new AppError(502, 'Erro ao gerar resposta da IA', 'AI_UNKNOWN_ERROR');
   }
+}
+
+/**
+ * Detecta se a resposta gerada pela IA indica que ela não soube responder,
+ * sinalizando necessidade de escalada para atendimento humano.
+ *
+ * Critérios:
+ * - Resposta muito curta (< MIN_RESPONSE_LENGTH caracteres)
+ * - Contém frases típicas de "não sei responder" ou "entre em contato"
+ */
+function detectEscalation(response: string): boolean {
+  if (response.length < MIN_RESPONSE_LENGTH) {
+    return true;
+  }
+
+  return ESCALATION_PATTERNS.some((pattern) => pattern.test(response));
 }

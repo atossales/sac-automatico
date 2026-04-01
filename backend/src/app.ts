@@ -14,6 +14,7 @@ import { queueRouter } from './modules/queue/queue.routes.js';
 import { personasRouter } from './modules/personas/personas.routes.js';
 import { playgroundRouter } from './modules/playground/playground.routes.js';
 import { logsRouter } from './modules/logs/logs.routes.js';
+import { automationRouter } from './modules/automation/automation.routes.js';
 import { queueService } from './modules/queue/queue.service.js';
 import { startMessageWorker, stopMessageWorker } from './modules/queue/workers/message.worker.js';
 import { startTokenRefreshJob } from './jobs/token-refresh.job.js';
@@ -104,6 +105,7 @@ app.use('/queue', queueRouter);
 app.use('/personas', personasRouter);
 app.use('/playground', playgroundRouter);
 app.use('/logs', logsRouter);
+app.use('/automation', automationRouter);
 
 // ── 404 ───────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {
@@ -168,9 +170,11 @@ async function bootstrap(): Promise<void> {
     });
   } catch (err) {
     logger.error({ err }, 'Falha ao inicializar o servidor');
-    // Log legível para debug em produção
-    console.error('ERRO DE INICIALIZAÇÃO:', err instanceof Error ? err.message : String(err));
-    if (err instanceof Error && err.stack) console.error(err.stack);
+    // Log legível para debug em produção (via logger estruturado)
+    logger.fatal(
+      { errorMessage: err instanceof Error ? err.message : String(err) },
+      'ERRO DE INICIALIZACAO — encerrando processo',
+    );
     process.exit(1);
   }
 }

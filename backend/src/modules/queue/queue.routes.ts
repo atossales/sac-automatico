@@ -52,19 +52,23 @@ queueRouter.get('/jobs', async (req, res, next) => {
       statuses.map((s) => queue.getJobs([s], 0, limit - 1)),
     );
 
-    const jobs = jobArrays
-      .flat()
-      .slice(0, limit)
-      .map((job: Job<IncomingDmJob>) => ({
-        id: job.id ?? '',
-        name: job.name,
-        data: job.data as unknown as Record<string, unknown>,
-        status: status ?? 'waiting',
-        timestamp: new Date(job.timestamp).toISOString(),
-        processedOn: job.processedOn ? new Date(job.processedOn).toISOString() : undefined,
-        finishedOn: job.finishedOn ? new Date(job.finishedOn).toISOString() : undefined,
-        failedReason: job.failedReason ?? undefined,
-      }));
+    const flatJobs = jobArrays.flat().slice(0, limit);
+
+    const jobs = await Promise.all(
+      flatJobs.map(async (job: Job<IncomingDmJob>) => {
+        const jobState = await job.getState();
+        return {
+          id: job.id ?? '',
+          name: job.name,
+          data: job.data as unknown as Record<string, unknown>,
+          status: jobState,
+          timestamp: new Date(job.timestamp).toISOString(),
+          processedOn: job.processedOn ? new Date(job.processedOn).toISOString() : undefined,
+          finishedOn: job.finishedOn ? new Date(job.finishedOn).toISOString() : undefined,
+          failedReason: job.failedReason ?? undefined,
+        };
+      }),
+    );
 
     res.json({ data: jobs, total: jobs.length });
   } catch (err) {

@@ -1,8 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { SidebarNav } from '@/components/SidebarNav';
-import { logout } from '@/lib/auth';
+import { getToken, logout } from '@/lib/auth';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -10,10 +10,29 @@ interface AdminLayoutProps {
 
 /**
  * Layout do painel do gestor.
- * Autenticação e proteção de rota serão implementadas em fase posterior.
- * Sidebar com 5 itens de navegação + top nav.
+ * Protegido por verificacao de token — redireciona para /auth/login se nao autenticado.
+ * Sidebar com 5 itens de navegacao + top nav.
  */
 export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      window.location.href = '/auth/login';
+      return;
+    }
+    setIsAuthenticated(true);
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-layout">
       <nav className="admin-nav">

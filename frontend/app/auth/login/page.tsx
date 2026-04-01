@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 const API_BASE_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001';
 
 interface LoginResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   expiresIn: number;
+  user: { username: string; role: 'admin' };
 }
 
 interface ApiErrorBody {
@@ -53,7 +55,8 @@ export default function LoginPage(): JSX.Element {
       }
 
       const data = body as LoginResponse;
-      sessionStorage.setItem('auth_token', data.token);
+      sessionStorage.setItem('auth_token', data.accessToken);
+      sessionStorage.setItem('refresh_token', data.refreshToken);
       router.push('/admin/dashboard');
     } catch {
       setError('Não foi possível conectar ao servidor. Verifique sua conexão.');

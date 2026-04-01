@@ -46,11 +46,23 @@ export default function AuthCallbackPage(): JSX.Element {
     }
 
     const apiUrl = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001';
+    const token = sessionStorage.getItem('auth_token');
+
+    if (!token) {
+      setState({
+        status: 'error',
+        message: 'Sessão expirada. Faça login novamente antes de conectar uma conta.',
+      });
+      setTimeout(() => router.push('/auth/login'), 2000);
+      return;
+    }
 
     fetch(`${apiUrl}/instagram/oauth/callback`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({ code }),
     })
       .then(async (res) => {

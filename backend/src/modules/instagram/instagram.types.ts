@@ -34,7 +34,7 @@ export interface MetaWebhookMessage {
 }
 
 export interface MetaWebhookAttachment {
-  type: 'audio' | 'file' | 'image' | 'video' | 'location' | 'fallback';
+  type: 'audio' | 'file' | 'image' | 'video' | 'location' | 'fallback' | 'story_mention';
   payload: {
     url?: string;
     title?: string;
@@ -89,6 +89,46 @@ export interface MetaConversationResponse {
   };
 }
 
+// ── OAuth / Account setup ───────────────────────────────────
+
+export interface MetaLongLivedTokenResponse {
+  access_token: string;
+  token_type: 'bearer';
+  expires_in: number;
+}
+
+export interface MetaPageData {
+  id: string;
+  name: string;
+  access_token: string;
+  instagram_business_account?: {
+    id: string;
+  };
+}
+
+export interface MetaPagesResponse {
+  data: MetaPageData[];
+  paging?: {
+    cursors: { before: string; after: string };
+    next?: string;
+  };
+}
+
+export interface MetaInstagramUserResponse {
+  id: string;
+  name: string;
+  username: string;
+}
+
+export interface OAuthCallbackResult {
+  id: string;
+  instagramId: string;
+  name: string;
+  pageId: string;
+  tokenExpiresAt: string;
+  isActive: boolean;
+}
+
 // ── Tipos internos ───────────────────────────────────────────
 
 export interface IncomingDmJob {
@@ -98,6 +138,8 @@ export interface IncomingDmJob {
   messageId: string;
   messageText: string;
   timestamp: number;
+  /** Tipo de conteúdo da mensagem recebida */
+  messageType: 'text' | 'image' | 'audio' | 'video' | 'file' | 'location' | 'sticker' | 'story_mention' | 'unknown';
 }
 
 export interface ConversationMessage {

@@ -1,15 +1,20 @@
 /**
- * Aplica um delay aleatório entre 3 e 12 segundos para simular
- * o comportamento humano de digitação antes de enviar uma resposta.
+ * Aplica um delay aleatório para simular o comportamento humano de digitação
+ * antes de enviar uma resposta.
  *
- * Conforme documentado no CLAUDE.md:
- * "Delay de resposta: mínimo 3s, máximo 12s aleatório para simular humanidade"
+ * Aceita delayMin e delayMax em segundos (valores da conta no banco).
+ * Fallback para 3-12s conforme CLAUDE.md quando não especificado.
  */
-const MIN_DELAY_MS = 3_000;
-const MAX_DELAY_MS = 12_000;
+const DEFAULT_MIN_DELAY_S = 3;
+const DEFAULT_MAX_DELAY_S = 12;
 
-export function humanDelay(): Promise<void> {
-  const ms = Math.floor(Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS + 1)) + MIN_DELAY_MS;
+export function humanDelay(
+  delayMinSeconds: number = DEFAULT_MIN_DELAY_S,
+  delayMaxSeconds: number = DEFAULT_MAX_DELAY_S,
+): Promise<void> {
+  const minMs = delayMinSeconds * 1_000;
+  const maxMs = delayMaxSeconds * 1_000;
+  const ms = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -17,6 +22,11 @@ export function humanDelay(): Promise<void> {
  * Retorna o número de milissegundos do delay sem executá-lo.
  * Útil para testes ou para logar o delay antes de aplicá-lo.
  */
-export function getHumanDelayMs(): number {
-  return Math.floor(Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS + 1)) + MIN_DELAY_MS;
+export function getHumanDelayMs(
+  delayMinSeconds: number = DEFAULT_MIN_DELAY_S,
+  delayMaxSeconds: number = DEFAULT_MAX_DELAY_S,
+): number {
+  const minMs = delayMinSeconds * 1_000;
+  const maxMs = delayMaxSeconds * 1_000;
+  return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
 }

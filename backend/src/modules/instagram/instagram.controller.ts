@@ -3,7 +3,28 @@ import { z } from 'zod';
 import * as instagramService from './instagram.service.js';
 import { queueService } from '../queue/queue.service.js';
 import { logger } from '../../utils/logger.js';
-import type { MetaWebhookPayload } from './instagram.types.js';
+import type { MetaWebhookPayload, MetaWebhookMessage, IncomingDmJob } from './instagram.types.js';
+
+/**
+ * Determina o tipo de conteúdo de uma mensagem recebida pelo webhook.
+ */
+function resolveMessageType(message: MetaWebhookMessage): IncomingDmJob['messageType'] {
+  if (message.text) return 'text';
+
+  const attachment = message.attachments?.[0];
+  if (!attachment) return 'unknown';
+
+  const typeMap: Record<string, IncomingDmJob['messageType']> = {
+    image: 'image',
+    audio: 'audio',
+    video: 'video',
+    file: 'file',
+    location: 'location',
+    story_mention: 'story_mention',
+  };
+
+  return typeMap[attachment.type] ?? 'unknown';
+}
 
 const webhookVerifySchema = z.object({
   'hub.mode': z.string(),
@@ -52,8 +73,8 @@ export async function receiveWebhook(req: Request, res: Response, _next: NextFun
       if (!entry.messaging) continue;
 
       for (const event of entry.messaging) {
-        // Ignora eventos sem mensagem de texto ou eco do próprio sistema
-        if (!event.message?.text) continue;
+        // Ignora eventos sem mensagem (read receipts, delivery, etc.)
+        if (!event.message) continue;
         if (event.message.is_echo) {
           logger.debug({ mid: event.message.mid }, 'Echo do sistema ignorado');
           continue;
@@ -73,11 +94,15 @@ export async function receiveWebhook(req: Request, res: Response, _next: NextFun
           continue;
         }
 
+        // Determinar tipo de mensagem recebida
+        const messageType = resolveMessageType(event.message);
+
         logger.info(
           {
             accountId,
             senderId: event.sender.id,
             messageId: event.message.mid,
+            messageType,
           },
           'DM recebido, enfileirando para processamento',
         );
@@ -87,8 +112,9 @@ export async function receiveWebhook(req: Request, res: Response, _next: NextFun
           senderId: event.sender.id,
           recipientId: event.recipient.id,
           messageId: event.message.mid,
-          messageText: event.message.text,
+          messageText: event.message.text ?? '',
           timestamp: event.timestamp,
+          messageType,
         });
       }
     }

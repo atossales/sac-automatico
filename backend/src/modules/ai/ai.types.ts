@@ -12,6 +12,8 @@ export interface AiGenerateOptions {
 export interface AiGenerateResult {
   response: string;
   tokensUsed?: number;
+  /** Indica que a IA sinalizou não saber responder e o caso precisa de atenção humana */
+  escalated?: boolean;
 }
 
 export interface AiError {

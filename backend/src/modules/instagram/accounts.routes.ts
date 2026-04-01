@@ -5,6 +5,7 @@ import { prisma } from '../../config/database.js';
 import { env } from '../../config/env.js';
 import { AppError } from '../../middleware/error.middleware.js';
 import { logger } from '../../utils/logger.js';
+import { handleOAuthCallback } from './accounts.service.js';
 
 export const accountsRouter = Router();
 
@@ -114,6 +115,38 @@ accountsRouter.get('/oauth/url', (_req, res, next) => {
     oauthUrl.searchParams.set('response_type', 'code');
 
     res.json({ url: oauthUrl.toString() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── OAuth callback ──────────────────────────────────────────
+
+const oauthCallbackSchema = z.object({
+  code: z.string().min(1, 'Código de autorização é obrigatório'),
+  state: z.string().optional(),
+});
+
+/**
+ * POST /instagram/oauth/callback
+ * Recebe o authorization code da Meta e completa o fluxo OAuth2:
+ * 1. Troca code por short-lived token
+ * 2. Troca por long-lived token (60 dias)
+ * 3. Busca páginas e contas Instagram Business vinculadas
+ * 4. Criptografa tokens e faz upsert no banco
+ */
+accountsRouter.post('/oauth/callback', async (req, res, next) => {
+  try {
+    const { code } = oauthCallbackSchema.parse(req.body);
+
+    const accounts = await handleOAuthCallback(code);
+
+    logger.info(
+      { count: accounts.length },
+      'Callback OAuth processado com sucesso',
+    );
+
+    res.status(201).json({ data: accounts });
   } catch (err) {
     next(err);
   }

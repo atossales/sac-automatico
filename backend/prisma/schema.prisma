@@ -29,6 +29,7 @@ model Account {
 
   conversations  Conversation[]
   trackedLinks   TrackedLink[]
+  automations    Automation[]
 
   @@index([pageId])
   @@index([isActive])
@@ -109,4 +110,29 @@ model LinkClick {
 
   @@index([trackedLinkId])
   @@index([clickedAt])
+}
+
+// ── Automation ────────────────────────────────────────────────
+// Gatilhos automáticos baseados em eventos do Instagram.
+// Quando um evento bate com o tipo e valor configurados,
+// a mensagem da automação é enviada no lugar da resposta da IA.
+model Automation {
+  id           String         @id @default(cuid())
+  accountId    String
+  account      Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type         AutomationType
+  triggerValue String?        // Palavra-chave para KEYWORD trigger
+  message      String         @db.Text // Mensagem a enviar quando o gatilho disparar
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([accountId])
+  @@index([type, isActive])
+}
+
+enum AutomationType {
+  WELCOME       // Primeira mensagem de um usuário
+  KEYWORD       // Mensagem contém palavra-chave
+  STORY_MENTION // Usuário mencionou nos stories
 }

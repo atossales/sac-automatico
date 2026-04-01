@@ -20,15 +20,21 @@ const paginationSchema = z.object({
 
 /**
  * GET /analytics/summary
- * Resumo de métricas de todas as contas (apenas admin).
+ * Resumo de métricas de todas as contas (admin) ou da conta vinculada (client).
  */
 analyticsRouter.get(
   '/summary',
-  requireRole('admin'),
-  async (_req, res, next) => {
+  requireRole('admin', 'client'),
+  async (req, res, next) => {
     try {
-      const data = await analyticsService.getAllAccountsSummary();
-      res.json({ data });
+      if (req.user?.role === 'client') {
+        // Client só vê métricas da própria conta
+        const data = await analyticsService.getAccountSummary(req.user.sub);
+        res.json({ data: [data] });
+      } else {
+        const data = await analyticsService.getAllAccountsSummary();
+        res.json({ data });
+      }
     } catch (err) {
       next(err);
     }

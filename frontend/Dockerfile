@@ -12,6 +12,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DOCKER_BUILD=true
 RUN npm run build
 
 # ── Estágio de produção ──────────────────────────────────────

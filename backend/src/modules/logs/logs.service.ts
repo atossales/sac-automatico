@@ -7,7 +7,7 @@ export interface ProcessingLogEntry {
   conversationId: string;
   status: 'success' | 'error' | 'timeout';
   errorMessage?: string;
-  processingTimeMs: number;
+  processingTimeMs: number | null;
   createdAt: string;
 }
 
@@ -30,8 +30,27 @@ export interface LogsFilter {
  * Cada mensagem enviada pela IA representa um processamento concluído.
  * Mensagens sem conteúdo ou com erros seriam tratadas como 'error'.
  */
+/**
+ * Infere o status de processamento a partir da mensagem.
+ * Mensagens sem conteúdo ou com conteúdo vazio são consideradas 'error'.
+ */
+function inferStatus(content: string | null): ProcessingLogEntry['status'] {
+  if (!content || content.trim().length === 0) return 'error';
+  return 'success';
+}
+
+/**
+ * Calcula o tempo de processamento em milissegundos.
+ * Usa a diferença entre createdAt (registro no DB) e sentAt (timestamp da mensagem).
+ * Retorna null se o cálculo não fizer sentido (negativo ou zero).
+ */
+function calculateProcessingTimeMs(sentAt: Date, createdAt: Date): number | null {
+  const diffMs = createdAt.getTime() - sentAt.getTime();
+  return diffMs > 0 ? diffMs : null;
+}
+
 export async function listLogs(filter: LogsFilter): Promise<LogsResult> {
-  const { accountId, startDate, endDate, page, pageSize } = filter;
+  const { accountId, status, startDate, endDate, page, pageSize } = filter;
   const skip = (page - 1) * pageSize;
 
   const dateFilter: { gte?: Date; lte?: Date } = {};
@@ -48,6 +67,17 @@ export async function listLogs(filter: LogsFilter): Promise<LogsResult> {
 
   if (startDate ?? endDate) {
     whereMessage['sentAt'] = dateFilter;
+  }
+
+  // BUG 3 fix: Filtrar por status na query quando possível.
+  // 'error' = mensagens sem conteúdo; 'success' = mensagens com conteúdo.
+  if (status === 'error') {
+    whereMessage['OR'] = [
+      { content: '' },
+      { content: null },
+    ];
+  } else if (status === 'success') {
+    whereMessage['content'] = { not: '' };
   }
 
   const [messages, total] = await Promise.all([
@@ -74,8 +104,8 @@ export async function listLogs(filter: LogsFilter): Promise<LogsResult> {
     accountId: msg.conversation.account.id,
     accountUsername: msg.conversation.account.name,
     conversationId: msg.conversationId,
-    status: 'success' as const,
-    processingTimeMs: 0,
+    status: inferStatus(msg.content),
+    processingTimeMs: calculateProcessingTimeMs(msg.sentAt, msg.createdAt),
     createdAt: msg.sentAt.toISOString(),
   }));
 
