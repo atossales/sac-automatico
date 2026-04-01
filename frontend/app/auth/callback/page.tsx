@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ApiError } from '@/lib/api';
 
@@ -9,17 +9,7 @@ type CallbackState =
   | { status: 'success' }
   | { status: 'error'; message: string };
 
-/**
- * Página de callback do OAuth2 da Meta.
- *
- * Fluxo:
- * 1. Meta redireciona para /auth/callback?code=XXX&state=YYY
- * 2. Esta página envia o código para o backend via POST /instagram/oauth/callback
- * 3. O backend troca o código pelo token, salva criptografado e redireciona
- *
- * Implementação completa do handler OAuth no backend será feita na Fase 1.
- */
-export default function AuthCallbackPage(): JSX.Element {
+function CallbackHandler(): JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [state, setState] = useState<CallbackState>({ status: 'loading' });
@@ -209,5 +199,13 @@ export default function AuthCallbackPage(): JSX.Element {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage(): JSX.Element {
+  return (
+    <Suspense>
+      <CallbackHandler />
+    </Suspense>
   );
 }
