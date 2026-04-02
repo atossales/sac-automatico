@@ -105,12 +105,12 @@ accountsRouter.get('/oauth/url', (_req, res, next) => {
   try {
     const redirectUri = `${env.FRONTEND_URL}/auth/callback`;
 
-    const oauthUrl = new URL('https://www.facebook.com/dialog/oauth');
+    const oauthUrl = new URL('https://api.instagram.com/oauth/authorize');
     oauthUrl.searchParams.set('client_id', env.META_APP_ID);
     oauthUrl.searchParams.set('redirect_uri', redirectUri);
     oauthUrl.searchParams.set(
       'scope',
-      'instagram_manage_messages,instagram_manage_comments,pages_show_list,pages_read_engagement',
+      'instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments',
     );
     oauthUrl.searchParams.set('response_type', 'code');
 

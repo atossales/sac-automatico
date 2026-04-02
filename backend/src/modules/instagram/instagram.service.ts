@@ -81,12 +81,10 @@ export async function refreshToken(accountId: string): Promise<void> {
 
   const currentToken = decryptToken(account.accessToken);
 
-  // Endpoint correto para Facebook Login / Instagram Business tokens
-  const url = new URL(`${GRAPH_API_BASE}/oauth/access_token`);
-  url.searchParams.set('grant_type', 'fb_exchange_token');
-  url.searchParams.set('client_id', env.META_APP_ID);
-  url.searchParams.set('client_secret', env.META_APP_SECRET);
-  url.searchParams.set('fb_exchange_token', currentToken);
+  // Instagram Login tokens são renovados via graph.instagram.com
+  const url = new URL('https://graph.instagram.com/refresh_access_token');
+  url.searchParams.set('grant_type', 'ig_refresh_token');
+  url.searchParams.set('access_token', currentToken);
 
   const response = await fetch(url.toString());
 
@@ -137,7 +135,7 @@ export async function sendMessage(
     messaging_type: 'RESPONSE',
   };
 
-  const response = await fetch(`${GRAPH_API_BASE}/me/messages`, {
+  const response = await fetch('https://graph.instagram.com/v21.0/me/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
