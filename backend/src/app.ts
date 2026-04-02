@@ -17,6 +17,7 @@ import { logsRouter } from './modules/logs/logs.routes.js';
 import { automationRouter } from './modules/automation/automation.routes.js';
 import { queueService } from './modules/queue/queue.service.js';
 import { startMessageWorker, stopMessageWorker } from './modules/queue/workers/message.worker.js';
+import { startCommentWorker, stopCommentWorker } from './modules/queue/workers/comment.worker.js';
 import { startTokenRefreshJob } from './jobs/token-refresh.job.js';
 import { logger } from './utils/logger.js';
 
@@ -124,6 +125,7 @@ async function bootstrap(): Promise<void> {
     await connectRedis();
 
     startMessageWorker();
+    startCommentWorker();
     startTokenRefreshJob();
 
     const server = app.listen(env.PORT, () => {
@@ -137,6 +139,7 @@ async function bootstrap(): Promise<void> {
       server.close(async () => {
         try {
           await stopMessageWorker();
+          await stopCommentWorker();
           await queueService.closeQueue();
           await disconnectDatabase();
           await disconnectRedis();

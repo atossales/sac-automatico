@@ -9,6 +9,7 @@ import type {
   MetaSendMessageResponse,
   MetaConversationResponse,
   ConversationMessage,
+  MetaCommentReplyResponse,
 } from './instagram.types.js';
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0';
@@ -305,6 +306,54 @@ export async function getMetaWebhookVerification(params: {
   }
 
   return params.hub_challenge;
+}
+
+/**
+ * Responde publicamente a um comentário do Instagram via Graph API.
+ * Endpoint: POST /{comment-id}/replies com { message, access_token }
+ */
+export async function replyToComment(
+  accountId: string,
+  commentId: string,
+  text: string,
+): Promise<MetaCommentReplyResponse> {
+  const account = await prisma.account.findUnique({ where: { id: accountId } });
+
+  if (!account) {
+    throw new AppError(404, `Conta não encontrada: ${accountId}`, 'ACCOUNT_NOT_FOUND');
+  }
+
+  if (!account.isActive) {
+    throw new AppError(409, `Conta desativada: ${accountId}`, 'ACCOUNT_INACTIVE');
+  }
+
+  const accessToken = decryptToken(account.accessToken);
+
+  const url = new URL(`${GRAPH_API_BASE}/${commentId}/replies`);
+  url.searchParams.set('access_token', accessToken);
+  url.searchParams.set('message', text);
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    logger.error(
+      { accountId, commentId, status: response.status, body: errorBody },
+      'Falha ao responder comentário via Graph API',
+    );
+    throw new AppError(502, 'Falha ao responder comentário no Instagram', 'COMMENT_REPLY_FAILED');
+  }
+
+  const data = (await response.json()) as MetaCommentReplyResponse;
+
+  logger.info(
+    { accountId, commentId, replyId: data.id },
+    'Resposta ao comentário enviada com sucesso',
+  );
+
+  return data;
 }
 
 export async function fetchConversationMessages(

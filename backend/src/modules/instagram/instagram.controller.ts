@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as instagramService from './instagram.service.js';
 import { queueService } from '../queue/queue.service.js';
 import { logger } from '../../utils/logger.js';
-import type { MetaWebhookPayload, MetaWebhookMessage, IncomingDmJob } from './instagram.types.js';
+import type { MetaWebhookPayload, MetaWebhookMessage, IncomingDmJob, MetaWebhookChange } from './instagram.types.js';
 
 /**
  * Determina o tipo de conteúdo de uma mensagem recebida pelo webhook.
@@ -70,9 +70,8 @@ export async function receiveWebhook(req: Request, res: Response, _next: NextFun
     }
 
     for (const entry of payload.entry) {
-      if (!entry.messaging) continue;
-
-      for (const event of entry.messaging) {
+      // ── Processamento de DMs ──────────────────────────────
+      for (const event of entry.messaging ?? []) {
         // Ignora eventos sem mensagem (read receipts, delivery, etc.)
         if (!event.message) continue;
         if (event.message.is_echo) {
@@ -116,6 +115,49 @@ export async function receiveWebhook(req: Request, res: Response, _next: NextFun
           timestamp: event.timestamp,
           messageType,
         });
+      }
+
+      // ── Processamento de comentários ────────────────────────
+      if (entry.changes) {
+        for (const change of entry.changes) {
+          if (change.field !== 'comments') continue;
+
+          const value = change.value;
+
+          const commentAccountId = await instagramService.findAccountByPageId(entry.id);
+
+          if (!commentAccountId) {
+            logger.warn({ pageId: entry.id }, 'Nenhuma conta ativa encontrada para comentário');
+            continue;
+          }
+
+          // Ignorar comentários do próprio sistema (loop prevention)
+          if (value.from.id === entry.id) {
+            logger.debug({ pageId: entry.id, commentId: value.id }, 'Comentário próprio ignorado');
+            continue;
+          }
+
+          logger.info(
+            {
+              accountId: commentAccountId,
+              commentId: value.id,
+              senderId: value.from.id,
+              mediaId: value.media.id,
+            },
+            'Comentário recebido, enfileirando para processamento',
+          );
+
+          await queueService.addCommentJob({
+            accountId: commentAccountId,
+            commentId: value.id,
+            commentText: value.text,
+            mediaId: value.media.id,
+            senderId: value.from.id,
+            senderName: value.from.name ?? value.from.username,
+            timestamp: value.timestamp,
+            parentId: value.parent_id,
+          });
+        }
       }
     }
   } catch (err) {

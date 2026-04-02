@@ -14,6 +14,30 @@ export interface MetaWebhookEntry {
   id: string;
   time: number;
   messaging?: MetaWebhookMessaging[];
+  changes?: MetaWebhookChange[];
+}
+
+// ── Webhook changes (comentários, menções) ──────────────────
+
+export interface MetaWebhookChange {
+  field: 'comments' | 'mentions' | 'live_comments';
+  value: MetaWebhookCommentValue;
+}
+
+export interface MetaWebhookCommentValue {
+  id: string;
+  text: string;
+  from: {
+    id: string;
+    name?: string;
+    username?: string;
+  };
+  media: {
+    id: string;
+    media_product_type?: string;
+  };
+  parent_id?: string;
+  timestamp: number;
 }
 
 export interface MetaWebhookMessaging {
@@ -72,6 +96,10 @@ export interface MetaSendMessageRequest {
 export interface MetaSendMessageResponse {
   recipient_id: string;
   message_id: string;
+}
+
+export interface MetaCommentReplyResponse {
+  id: string;
 }
 
 export interface MetaConversationMessage {
@@ -140,6 +168,18 @@ export interface IncomingDmJob {
   timestamp: number;
   /** Tipo de conteúdo da mensagem recebida */
   messageType: 'text' | 'image' | 'audio' | 'video' | 'file' | 'location' | 'sticker' | 'story_mention' | 'unknown';
+}
+
+export interface IncomingCommentJob {
+  accountId: string;
+  commentId: string;
+  commentText: string;
+  mediaId: string;
+  senderId: string;
+  senderName?: string;
+  timestamp: number;
+  /** Se é reply a outro comentário */
+  parentId?: string;
 }
 
 export interface ConversationMessage {
