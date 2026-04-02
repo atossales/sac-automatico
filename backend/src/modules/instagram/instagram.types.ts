@@ -157,6 +157,10 @@ export interface OAuthCallbackResult {
   isActive: boolean;
 }
 
+export interface MetaSubscribeAppResponse {
+  success: boolean;
+}
+
 // ── Tipos internos ───────────────────────────────────────────
 
 export interface IncomingDmJob {

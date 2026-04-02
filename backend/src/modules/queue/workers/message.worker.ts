@@ -11,6 +11,7 @@ import {
   getAccountConfig,
 } from '../../instagram/instagram.service.js';
 import { checkAndTrigger } from '../../automation/automation.service.js';
+import { replaceUrlsWithTrackedLinks } from '../../tracker/tracker.service.js';
 import { humanDelay } from '../../../utils/delay.js';
 import type { IncomingDmJob } from '../../instagram/instagram.types.js';
 
@@ -167,11 +168,14 @@ async function processTextMessage(job: { data: IncomingDmJob; id?: string }): Pr
     return;
   }
 
-  // Envia a resposta via Graph API
-  const sent = await sendMessage(accountId, senderId, response);
+  // Substitui URLs na resposta por links rastreáveis (falha silenciosa — mantém URL original)
+  const trackedResponse = await replaceUrlsWithTrackedLinks(accountId, response);
 
-  // Persiste a resposta enviada
-  await saveMessage(conversationId, response, 'ASSISTANT', sent.message_id);
+  // Envia a resposta via Graph API
+  const sent = await sendMessage(accountId, senderId, trackedResponse);
+
+  // Persiste a resposta enviada (com URLs já substituídas)
+  await saveMessage(conversationId, trackedResponse, 'ASSISTANT', sent.message_id);
 
   logger.info(
     { accountId, senderId, messageId: sent.message_id, escalated: escalated ?? false },

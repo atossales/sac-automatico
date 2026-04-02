@@ -8,6 +8,7 @@ import type {
   MetaLongLivedTokenResponse,
   MetaPagesResponse,
   MetaInstagramUserResponse,
+  MetaSubscribeAppResponse,
   OAuthCallbackResult,
 } from './instagram.types.js';
 
@@ -78,6 +79,39 @@ async function fetchInstagramUser(
 }
 
 /**
+ * Assina o app nos webhooks de uma Page do Facebook.
+ * Obrigatório para receber DMs via webhook após conectar a conta.
+ * Campos subscritos: messages, messaging_postbacks, messaging_optins.
+ *
+ * Falha silenciosa: se a subscrição falhar, logamos o erro mas não
+ * interrompemos o fluxo — a conta é salva e o gestor pode tentar reconectar.
+ */
+async function subscribePageWebhook(pageId: string, pageAccessToken: string): Promise<void> {
+  const url = new URL(`${GRAPH_API_BASE}/${pageId}/subscribed_apps`);
+  url.searchParams.set('access_token', pageAccessToken);
+  url.searchParams.set('subscribed_fields', 'messages,messaging_postbacks,messaging_optins');
+
+  const response = await fetch(url.toString(), { method: 'POST' });
+
+  if (!response.ok) {
+    const body = await response.text();
+    logger.error(
+      { pageId, status: response.status, body },
+      'Falha ao assinar webhook da página — DMs podem não ser recebidos',
+    );
+    return;
+  }
+
+  const data = (await response.json()) as MetaSubscribeAppResponse;
+
+  if (data.success) {
+    logger.info({ pageId }, 'Webhook da página assinado com sucesso');
+  } else {
+    logger.warn({ pageId, data }, 'Resposta de subscrição de webhook inesperada');
+  }
+}
+
+/**
  * Handler principal do callback OAuth2.
  *
  * Fluxo completo:
@@ -86,7 +120,8 @@ async function fetchInstagramUser(
  * 3. Busca as páginas do Facebook associadas
  * 4. Para cada página com conta Instagram Business, busca dados do perfil IG
  * 5. Criptografa o token e faz upsert no banco (por instagramId)
- * 6. Retorna os dados das contas conectadas
+ * 6. Assina os webhooks da página para receber DMs
+ * 7. Retorna os dados das contas conectadas
  */
 export async function handleOAuthCallback(code: string): Promise<OAuthCallbackResult[]> {
   const redirectUri = `${env.FRONTEND_URL}/auth/callback`;
@@ -166,6 +201,9 @@ export async function handleOAuthCallback(code: string): Promise<OAuthCallbackRe
       { accountId: account.id, instagramId: igAccountId, username: igUser.username },
       'Conta Instagram conectada via OAuth',
     );
+
+    // 6. Assina webhooks da página para receber DMs (falha silenciosa)
+    await subscribePageWebhook(page.id, page.access_token);
 
     results.push({
       id: account.id,

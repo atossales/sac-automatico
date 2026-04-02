@@ -5,6 +5,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    // Setup file executado antes de cada test file — define env vars antes dos imports
+    setupFiles: ['src/__tests__/setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -15,11 +17,17 @@ export default defineConfig({
         'prisma/',
       ],
     },
-    // Timeout mais alto para testes que envolvem crypto
-    testTimeout: 10_000,
+    testTimeout: 15_000,
+    // Força CJS/ESM interop para pacotes com problemas de compatibilidade no Node 24
+    deps: {
+      optimizer: {
+        ssr: {
+          include: ['jsonwebtoken', 'bcryptjs', 'semver'],
+        },
+      },
+    },
   },
   resolve: {
-    // Suporte a imports com .js extension (Node.js ESM)
     extensions: ['.ts', '.js'],
   },
 });

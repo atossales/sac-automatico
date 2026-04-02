@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { setTokens } from '@/lib/auth';
 
 const API_BASE_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001';
 
@@ -55,8 +56,7 @@ export default function LoginPage(): JSX.Element {
       }
 
       const data = body as LoginResponse;
-      sessionStorage.setItem('auth_token', data.accessToken);
-      sessionStorage.setItem('refresh_token', data.refreshToken);
+      setTokens(data.accessToken, data.refreshToken);
       router.push('/admin/dashboard');
     } catch {
       setError('Não foi possível conectar ao servidor. Verifique sua conexão.');

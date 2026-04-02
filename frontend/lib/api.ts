@@ -3,8 +3,49 @@
  * Nunca faça chamadas diretas à DB no frontend — sempre via este cliente.
  */
 
+import { getRefreshToken, setTokens, logout } from './auth';
+
 const API_BASE_URL =
   process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001';
+
+interface RefreshResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+/**
+ * Tenta renovar o access token usando o refresh token armazenado.
+ * Retorna o novo access token ou null se não for possível renovar.
+ * Em caso de falha, faz logout automático.
+ */
+async function tryRefreshToken(): Promise<string | null> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    logout();
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) {
+      logout();
+      return null;
+    }
+
+    const data = (await res.json()) as RefreshResponse;
+    setTokens(data.accessToken, data.refreshToken);
+    return data.accessToken;
+  } catch {
+    logout();
+    return null;
+  }
+}
 
 export class ApiError extends Error {
   constructor(
@@ -38,7 +79,7 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   token?: string;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function doRequest<T>(path: string, options: RequestOptions, activeToken?: string): Promise<T> {
   const { body, token, headers: extraHeaders, ...rest } = options;
 
   const headers: Record<string, string> = {
@@ -46,8 +87,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     ...(extraHeaders as Record<string, string>),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  const bearerToken = activeToken ?? token;
+  if (bearerToken) {
+    headers['Authorization'] = `Bearer ${bearerToken}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -78,6 +120,26 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   return response.json() as Promise<T>;
+}
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  try {
+    return await doRequest<T>(path, options);
+  } catch (err) {
+    // Se o token expirou, tenta renovar e repetir uma vez
+    if (
+      err instanceof ApiError &&
+      err.status === 401 &&
+      err.code === 'TOKEN_EXPIRED' &&
+      options.token
+    ) {
+      const newToken = await tryRefreshToken();
+      if (newToken) {
+        return doRequest<T>(path, options, newToken);
+      }
+    }
+    throw err;
+  }
 }
 
 // ── Analytics ─────────────────────────────────────────────────

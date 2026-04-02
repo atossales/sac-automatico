@@ -109,6 +109,47 @@ export async function registerClickAndGetUrl(
   return link.originalUrl;
 }
 
+// Regex que captura URLs http/https (não captura URLs já rastreadas para evitar duplo wrap)
+const URL_REGEX = /https?:\/\/[^\s<>"']+/g;
+
+/**
+ * Substitui todas as URLs http/https em um texto por links rastreáveis.
+ * URLs que já pertencem ao TRACKER_BASE_URL são ignoradas para evitar duplo wrap.
+ * Se uma URL falhar ao ser criada, ela é mantida original (never break the response).
+ */
+export async function replaceUrlsWithTrackedLinks(
+  accountId: string,
+  text: string,
+): Promise<string> {
+  const trackerBase = env.TRACKER_BASE_URL;
+  const urls = text.match(URL_REGEX);
+
+  if (!urls || urls.length === 0) return text;
+
+  // Deduplica e filtra URLs já rastreadas
+  const uniqueUrls = [...new Set(urls)].filter((url) => !url.startsWith(trackerBase));
+
+  if (uniqueUrls.length === 0) return text;
+
+  // Cria tracked links em paralelo (deduplicação já está no createTrackedLink)
+  const replacements = new Map<string, string>();
+
+  await Promise.all(
+    uniqueUrls.map(async (url) => {
+      try {
+        const { shortUrl } = await createTrackedLink(accountId, url);
+        replacements.set(url, shortUrl);
+      } catch (err) {
+        // Mantém URL original se falhar — nunca quebra a resposta
+        logger.warn({ accountId, url, err }, 'Falha ao criar link rastreável — URL original mantida');
+      }
+    }),
+  );
+
+  // Substitui todas as ocorrências no texto
+  return text.replace(URL_REGEX, (url) => replacements.get(url) ?? url);
+}
+
 /**
  * Retorna métricas de cliques para todos os links de uma conta.
  */
