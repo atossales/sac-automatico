@@ -61,10 +61,13 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // ── CORS ─────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
+const allowedOrigin = env.FRONTEND_URL.replace(/\/$/, '');
+logger.info({ allowedOrigin }, 'CORS configurado para origem');
 
-  if (origin === env.FRONTEND_URL) {
+app.use((req, res, next) => {
+  const origin = req.headers.origin?.replace(/\/$/, '');
+
+  if (origin && origin === allowedOrigin) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
