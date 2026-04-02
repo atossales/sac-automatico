@@ -110,7 +110,7 @@ accountsRouter.get('/oauth/url', (_req, res, next) => {
     oauthUrl.searchParams.set('redirect_uri', redirectUri);
     oauthUrl.searchParams.set(
       'scope',
-      'instagram_manage_messages,instagram_manage_comments,pages_show_list,pages_read_engagement,pages_messaging',
+      'instagram_manage_messages,instagram_manage_comments,pages_show_list,pages_read_engagement',
     );
     oauthUrl.searchParams.set('response_type', 'code');
 
