@@ -10,7 +10,7 @@ export const analyticsRouter = Router();
 analyticsRouter.use(authenticate);
 
 const accountIdSchema = z.object({
-  accountId: z.string().uuid('accountId deve ser um UUID válido'),
+  accountId: z.string().min(1, 'accountId é obrigatório'),
 });
 
 const paginationSchema = z.object({
