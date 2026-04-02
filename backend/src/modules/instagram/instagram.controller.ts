@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as instagramService from './instagram.service.js';
 import { queueService } from '../queue/queue.service.js';
 import { logger } from '../../utils/logger.js';
-import type { MetaWebhookPayload, MetaWebhookMessage, IncomingDmJob, MetaWebhookChange } from './instagram.types.js';
+import type { MetaWebhookPayload, MetaWebhookMessage, IncomingDmJob } from './instagram.types.js';
 
 /**
  * Determina o tipo de conteúdo de uma mensagem recebida pelo webhook.
@@ -147,15 +147,16 @@ export async function receiveWebhook(req: Request, res: Response, _next: NextFun
             'Comentário recebido, enfileirando para processamento',
           );
 
+          const senderName = value.from.name ?? value.from.username;
           await queueService.addCommentJob({
             accountId: commentAccountId,
             commentId: value.id,
             commentText: value.text,
             mediaId: value.media.id,
             senderId: value.from.id,
-            senderName: value.from.name ?? value.from.username,
+            ...(senderName !== undefined && { senderName }),
             timestamp: value.timestamp,
-            parentId: value.parent_id,
+            ...(value.parent_id !== undefined && { parentId: value.parent_id }),
           });
         }
       }
